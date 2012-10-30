@@ -14,7 +14,7 @@ class SimpleBlockingServer(object):
         self.__address = address
         
         self.__listen_thread = threading.Thread(target=SimpleBlockingServer.server_thread_target, args=[self])
-        self.__started = False              # indicates that server is initialized and accepting client connections
+        self.__started = threading.Event()  # indicates that server is initialized and accepting client connections
         self.__accept_connections = True    # shall server accept new connections or should it leave listening loop
         self.__connections = []             # store server connection threads
 
@@ -38,8 +38,7 @@ class SimpleBlockingServer(object):
         """
         Wait for server to initialize
         """
-        while not self.__started:
-            time.sleep(0)
+        self.__started.wait()
 
 
     def __server_wait_for_end(self):
@@ -120,7 +119,7 @@ class SimpleBlockingServer(object):
             # accept connection loop
             while server.__accept_connections:
 
-                server.__started = True
+                server.__started.set()
                 # wait for client connection
                 connection_socket, connection_addr = server_socket.accept()
                 # since closing listening socket not forces accept to throw exception we need to check a flag
